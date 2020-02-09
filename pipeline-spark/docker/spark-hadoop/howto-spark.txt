@@ -1,0 +1,27 @@
+hdfs dfs -mkdir /data
+hdfs dfs -mkdir /data/flight
+hdfs dfs -mkdir /user
+hdfs dfs -mkdir /user
+
+hdfs dfs -put /tmp/shared/flights20170102.json /data/flight/flights20170102.json
+
+
+./bin/spark-submit \
+ --class com.petezybrick.pipeline.spark.basic.SparkPi \
+ --deploy-mode cluster \
+ --master spark://pipeline-spark-master:7077 \
+ --executor-memory 8G \
+ --executor-cores 2 \
+ --total-executor-cores 6 \
+ /tmp/shared/pipeline-spark-1.0.0.jar \
+ 10
+
+./bin/spark-submit \
+ --class com.petezybrick.pipeline.spark.basic.FlightData \
+ --deploy-mode cluster \
+ --master spark://pipeline-spark-master:7077 \
+ --executor-memory 8G \
+ --executor-cores 2 \
+ --total-executor-cores 6 \
+ /tmp/shared/pipeline-spark-1.0.0.jar
+
