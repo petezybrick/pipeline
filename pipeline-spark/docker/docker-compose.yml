@@ -1,0 +1,261 @@
+version: '3'
+
+services:
+  pipeline-spark-master:
+    image: spark:2.4.0
+    command: bin/spark-class org.apache.spark.deploy.master.Master -h pipeline-spark-master
+    hostname: pipeline-spark-master
+    container_name: pipeline-spark-master
+    environment:
+      MASTER: spark://pipeline-spark-master:7077
+      SPARK_CONF_DIR: /conf
+      SPARK_PUBLIC_DNS: localhost
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 8g
+      SPARK_DRIVER_MEMORY: 8G
+      SPARK_DAEMON_MEMORY: 8G
+    expose:
+    - 465
+    - 7001
+    - 7002
+    - 7003
+    - 7004
+    - 7005
+    - 7006
+    - 7077
+    - 6066
+    ports:
+    - 4040:4040
+    - 6066:6066
+    - 7077:7077
+    - 8080:8080
+    volumes:
+    - ./shared:/tmp/shared
+    - ./spark/conf/master:/conf
+
+  pipeline-spark-worker1:
+    image: spark:2.4.0
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://pipeline-spark-master:7077
+    hostname: pipeline-spark-worker1
+    container_name: pipeline-spark-worker1
+    environment:
+      SPARK_CONF_DIR: /conf
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 8g
+      SPARK_WORKER_PORT: 8881
+      SPARK_WORKER_WEBUI_PORT: 8181
+      SPARK_PUBLIC_DNS: localhost
+      SPARK_EXECUTOR_INSTANCES: 2
+      SPARK_EXECUTOR_CORES: 2
+      SPARK_EXECUTOR_MEMORY: 8G
+      SPARK_DRIVER_MEMORY: 8G
+      SPARK_DAEMON_MEMORY: 8G
+    links:
+    - pipeline-spark-master
+    expose:
+    - 465
+    - 7012
+    - 7013
+    - 7014
+    - 7015
+    - 7016
+    - 8881
+    ports:
+    - 8181:8181
+    volumes:
+    - ./shared:/tmp/shared
+    - ./spark/conf/worker:/conf
+
+  pipeline-spark-worker2:
+    image: spark:2.4.0
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://pipeline-spark-master:7077
+    hostname: pipeline-spark-worker2
+    container_name: pipeline-spark-worker2
+    environment:
+      SPARK_CONF_DIR: /conf
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 8g
+      SPARK_WORKER_PORT: 8881
+      SPARK_WORKER_WEBUI_PORT: 8182
+      SPARK_PUBLIC_DNS: localhost
+      SPARK_EXECUTOR_INSTANCES: 2
+      SPARK_EXECUTOR_CORES: 2
+      SPARK_EXECUTOR_MEMORY: 8G
+      SPARK_DRIVER_MEMORY: 8G
+      SPARK_DAEMON_MEMORY: 8G
+    links:
+    - pipeline-spark-master
+    expose:
+    - 465
+    - 7012
+    - 7013
+    - 7014
+    - 7015
+    - 7016
+    - 8881
+    ports:
+    - 8182:8182
+    volumes:
+    - ./shared:/tmp/shared
+    - ./spark/conf/worker:/conf
+
+  pipeline-spark-worker3:
+    image: spark:2.4.0
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://pipeline-spark-master:7077
+    hostname: pipeline-spark-worker3
+    container_name: pipeline-spark-worker3
+    environment:
+      SPARK_CONF_DIR: /conf
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 8g
+      SPARK_WORKER_PORT: 8881
+      SPARK_WORKER_WEBUI_PORT: 8183
+      SPARK_PUBLIC_DNS: localhost
+      SPARK_EXECUTOR_INSTANCES: 2
+      SPARK_EXECUTOR_CORES: 2
+      SPARK_EXECUTOR_MEMORY: 8G
+      SPARK_DRIVER_MEMORY: 8G
+      SPARK_DAEMON_MEMORY: 8G
+    links:
+    - pipeline-spark-master
+    expose:
+    - 465
+    - 7012
+    - 7013
+    - 7014
+    - 7015
+    - 7016
+    - 8881
+    ports:
+    - 8183:8183
+    volumes:
+    - ./shared:/tmp/shared
+    - ./spark/conf/worker:/conf
+
+  pipeline-spark-worker4:
+    image: spark:2.4.0
+    command: bin/spark-class org.apache.spark.deploy.worker.Worker spark://pipeline-spark-master:7077
+    hostname: pipeline-spark-worker4
+    container_name: pipeline-spark-worker4
+    environment:
+      SPARK_CONF_DIR: /conf
+      SPARK_WORKER_CORES: 2
+      SPARK_WORKER_MEMORY: 8g
+      SPARK_WORKER_PORT: 8881
+      SPARK_WORKER_WEBUI_PORT: 8184
+      SPARK_PUBLIC_DNS: localhost
+      SPARK_EXECUTOR_INSTANCES: 2
+      SPARK_EXECUTOR_CORES: 2
+      SPARK_EXECUTOR_MEMORY: 8G
+      SPARK_DRIVER_MEMORY: 8G
+      SPARK_DAEMON_MEMORY: 8G
+    links:
+    - pipeline-spark-master
+    expose:
+    - 465
+    - 7012
+    - 7013
+    - 7014
+    - 7015
+    - 7016
+    - 8881
+    ports:
+    - 8184:8184
+    volumes:
+    - ./shared:/tmp/shared
+    - ./spark/conf/worker:/conf
+
+
+  pipeline-hive-mysql:
+    image: mysql:5.6
+    command: mysqld_safe
+    hostname: pipeline-hive-mysql
+    container_name: pipeline-hive-mysql
+    expose:
+      - 3306
+    ports:
+      - 3308:3306
+    volumes:
+      - ./shared:/tmp/shared
+
+  pipeline-hive-namenode:
+    image: hadoop-hive:2.9.0
+    command: startNameNodeHiveServer.sh
+    hostname: pipeline-hive-namenode
+    container_name: pipeline-hive-namenode
+    #    environment:
+    #      HADOOP_PREFIX: /usr/local/hadoop
+    expose:
+      - 50070
+      - 9000
+      - 9083
+      - 10000
+      - 10002
+    ports:
+      - 50070:50070
+      - 9000:9000
+      - 9083:9083
+      - 10000:10000
+      - 10002:10002
+    volumes:
+      - ./shared:/tmp/shared
+      - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+      - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    depends_on:
+      - pipeline-hive-mysql
+
+
+  pipeline-hive-secondarynamenode:
+    image: hadoop-hive:2.9.0
+    command: hdfs secondarynamenode
+    hostname: pipeline-hive-secondarynamenode
+    container_name: pipeline-hive-secondarynamenode
+    #    environment:
+    #      HADOOP_PREFIX: /usr/local/hadoop
+    expose:
+      - 50090
+    ports:
+      - 50090:50090
+    volumes:
+      - ./shared:/tmp/shared
+      - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+      - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    depends_on:
+      - pipeline-hive-namenode
+
+  pipeline-hive-datanode1:
+    image: hadoop-hive:2.9.0
+    command: hdfs datanode
+    hostname: pipeline-hive-datanode1
+    container_name: pipeline-hive-datanode1
+    #    environment:
+    #      HADOOP_PREFIX: /usr/local/hadoop
+    expose:
+      - 50075
+    ports:
+      - 50075:50075
+    volumes:
+      - ./shared:/tmp/shared
+      - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+      - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    depends_on:
+      - pipeline-hive-secondarynamenode
+
+  pipeline-hive-datanode2:
+    image: hadoop-hive:2.9.0
+    command: hdfs datanode
+    hostname: pipeline-hive-datanode2
+    container_name: pipeline-hive-datanode2
+    #    environment:
+    #      HADOOP_PREFIX: /usr/local/hadoop
+    expose:
+      - 50076
+    ports:
+      - 50076:50076
+    volumes:
+      - ./shared:/tmp/shared
+      - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+      - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    depends_on:
+      - pipeline-hive-secondarynamenode
+

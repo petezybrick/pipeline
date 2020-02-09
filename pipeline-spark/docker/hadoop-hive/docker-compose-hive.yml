@@ -1,0 +1,97 @@
+version: '3'
+
+services:
+    
+  pipeline-hive-mysql:
+    image: mysql:5.6
+    command: mysqld_safe
+    hostname: pipeline-hive-mysql
+    container_name: pipeline-hive-mysql
+    expose:
+      - 3306
+    ports:
+      - 3308:3306
+    volumes:
+      - ./shared:/tmp/shared
+  
+  pipeline-hive-namenode:
+    image: hadoop-hive:2.9.0
+    command: startNameNodeHiveServer.sh
+    hostname: pipeline-hive-namenode
+    container_name: pipeline-hive-namenode
+#    environment:
+#      HADOOP_PREFIX: /usr/local/hadoop
+    expose:
+      - 50070
+      - 9000
+      - 9083
+      - 10000
+      - 10002
+    ports:
+      - 50070:50070
+      - 9000:9000
+      - 9083:9083
+      - 10000:10000
+      - 10002:10002
+    volumes:
+      - ./shared:/tmp/shared
+      - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+      - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    depends_on:
+      - pipeline-hive-mysql
+
+      
+  pipeline-hive-secondarynamenode:
+    image: hadoop-hive:2.9.0
+    command: hdfs secondarynamenode
+    hostname: pipeline-hive-secondarynamenode
+    container_name: pipeline-hive-secondarynamenode
+#    environment:
+#      HADOOP_PREFIX: /usr/local/hadoop
+    expose:
+      - 50090
+    ports:
+      - 50090:50090
+    volumes:
+      - ./shared:/tmp/shared
+      - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+      - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    depends_on:
+      - pipeline-hive-namenode
+
+  pipeline-hive-datanode1:
+    image: hadoop-hive:2.9.0
+    command: hdfs datanode
+    hostname: pipeline-hive-datanode1
+    container_name: pipeline-hive-datanode1
+#    environment:
+#      HADOOP_PREFIX: /usr/local/hadoop
+    expose:
+      - 50075
+    ports:
+      - 50075:50075
+    volumes:
+      - ./shared:/tmp/shared
+      - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+      - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    depends_on:
+      - pipeline-hive-secondarynamenode
+ 
+  pipeline-hive-datanode2:
+    image: hadoop-hive:2.9.0
+    command: hdfs datanode
+    hostname: pipeline-hive-datanode2
+    container_name: pipeline-hive-datanode2
+#    environment:
+#      HADOOP_PREFIX: /usr/local/hadoop
+    expose:
+      - 50076
+    ports:
+      - 50076:50076
+    volumes:
+      - ./shared:/tmp/shared
+      - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+      - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    depends_on:
+      - pipeline-hive-secondarynamenode
+

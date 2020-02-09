@@ -320,7 +320,7 @@
                             <version>${project.version}</version>
                             <type>jar</type>
                             <overWrite>true</overWrite>
-                            <outputDirectory>docker/spark-hadoop/shared</outputDirectory>
+                            <outputDirectory>pipeline-spark/docker/shared</outputDirectory>
                         </artifactItem>
                     </artifactItems>
                 </configuration>

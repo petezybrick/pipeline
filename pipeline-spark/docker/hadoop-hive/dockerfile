@@ -1,0 +1,52 @@
+FROM ubuntu-java-python-nano:14.04.5
+MAINTAINER Pete Zybrick <pzybrick@gmail.com>
+
+RUN apt-get update \
+ && apt-get clean \
+ && rm -rf /var/lib/apt/lists/*    
+
+#
+ENV HADOOP_VERSION	2.9.0
+ENV HADOOP_HOME		/usr/local/hadoop
+ENV HADOOP_OPTS		-Djava.library.path=/usr/local/hadoop/lib/native
+ENV PATH		$PATH:$HADOOP_HOME/bin:$HADOOP_HOME/sbin
+add hadoop-${HADOOP_VERSION}.tar.gz /usr/local
+RUN ln -s /usr/local/hadoop-${HADOOP_VERSION} $HADOOP_HOME  && \
+    mkdir -p /usr/local/hadoop-${HADOOP_VERSION}/logs
+
+COPY conf  $HADOOP_HOME/etc/hadoop/
+
+RUN groupadd hadoop
+RUN useradd hadoop -g hadoop -d $HADOOP_HOME
+RUN echo 'hadoop:hadoop' | chpasswd
+RUN chgrp -R hadoop $HADOOP_HOME
+RUN chown -R hadoop $HADOOP_HOME
+
+
+# Formatting HDFS
+RUN mkdir -p /data/dfs/data /data/dfs/name /data/dfs/namesecondary && \
+    hdfs namenode -format
+VOLUME /data
+
+EXPOSE 9000 50070 50010 50020 50075 50090
+
+# Hive
+ENV HIVE_VERSION	2.3.2
+ENV HIVE_HOME		/usr/local/hive
+ENV PATH		$PATH:$HIVE_HOME/bin
+add apache-hive-${HIVE_VERSION}-bin.tar.gz /usr/local
+RUN ln -s /usr/local/apache-hive-${HIVE_VERSION}-bin $HIVE_HOME  && \
+    mkdir -p /usr/local/apache-hive-${HIVE_VERSION}-bin/logs
+
+COPY mysql-connector-java-8.0.11.jar  $HIVE_HOME/lib/mysql-connector-java-8.0.11.jar
+
+RUN groupadd hive
+RUN useradd hive -g hive -d $HIVE_HOME
+RUN echo 'hive:hive' | chpasswd
+RUN chgrp -R hive $HIVE_HOME
+RUN chown -R hive $HIVE_HOME
+
+COPY startNameNodeHiveServer.sh  $HADOOP_HOME/bin/startNameNodeHiveServer.sh
+RUN chmod +x $HADOOP_HOME/bin/startNameNodeHiveServer.sh
+
+CMD ["hdfs"]

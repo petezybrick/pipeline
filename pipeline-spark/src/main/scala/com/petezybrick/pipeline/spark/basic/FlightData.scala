@@ -68,6 +68,9 @@ object FlightData {
     // import sparkSession.sqlContext.implicits._
     import sparkSession.implicits._
     val df : Dataset[Flight] = sparkSession.read.format("json").option("inferSchema", "false"). schema(schema).load(file).as[Flight]
+    val flightsByCarrier : KeyValueGroupedDataset[String,Flight] = df.groupByKey(flight => flight.carrier)
+    println(flightsByCarrier)
+
 
 
     val r1 : DataFrame = df.filter(flight => flight.carrier=="DL").select("dest","origin", "carrier").cache()
