@@ -24,6 +24,20 @@ LIKE tip_temp
 STORED AS PARQUET
 LOCATION 'hdfs://pipeline-hive-namenode:9000/user/pipeline/db_demo/tip'
 
-drop table tip_tempuser
+drop table tip_temp
+
+==========================================
+
+CREATE TABLE flight_temp
+STORED AS AVRO
+TBLPROPERTIES ('avro.schema.url'='hdfs://pipeline-hive-namenode:9000/user/pipeline/avro_schema/flight.avsc')
+
+CREATE EXTERNAL TABLE flight
+LIKE flight_temp
+PARTITIONED BY (carrier string)
+STORED AS PARQUET
+LOCATION 'hdfs://pipeline-hive-namenode:9000/user/pipeline/db_flight'
+
+drop table flight_temp
 
 

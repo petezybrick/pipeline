@@ -1,0 +1,55 @@
+{
+  "name": "tip",
+  "namespace": "com.petezybrick.flight",
+  "type": "record",
+  "fields": [
+    {
+      "name": "flight_id",
+      "type": "string"
+    },
+    {
+      "name": "dofW",
+      "type": "int"
+    },
+    {
+      "name": "carrier",
+      "type": "string"
+    },
+    {
+      "name": "origin",
+      "type": "string"
+    },
+    {
+      "name": "dest",
+      "type": "string"
+    },
+    {
+      "name": "crsdephour",
+      "type": "int"
+    },
+    {
+      "name": "crsdeptime",
+      "type": "double"
+    },
+    {
+      "name": "depdelay",
+      "type": "double"
+    },
+    {
+      "name": "crsarrtime",
+      "type": "double"
+    },
+    {
+      "name": "arrdelay",
+      "type": "double"
+    },
+    {
+      "name": "crselapsedtime",
+      "type": "double"
+    },
+    {
+      "name": "dist",
+      "type": "double"
+    }
+  ]
+}

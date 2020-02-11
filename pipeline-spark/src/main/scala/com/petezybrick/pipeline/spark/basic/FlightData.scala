@@ -18,6 +18,7 @@
 // scalastyle:off println
 package com.petezybrick.pipeline.spark.basic
 
+import org.apache.avro.generic.GenericData
 import org.apache.spark.sql.{SparkSession, _}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types._
@@ -69,20 +70,40 @@ object FlightData {
     import sparkSession.implicits._
     val df : Dataset[Flight] = sparkSession.read.format("json").option("inferSchema", "false"). schema(schema).load(file).as[Flight]
     val flightsByCarrier : KeyValueGroupedDataset[String,Flight] = df.groupByKey(flight => flight.carrier)
-    println(flightsByCarrier)
+
+//    val flightArraysByCarrier : Dataset[(String, Array[Flight])] = flightsByCarrier.mapGroups { case (k, iter) => (k, iter.map(x => x).toArray) }
+//    flightArraysByCarrier.foreach( kv => {
+//      println("key " + kv._1)
+//      println("value " + kv._2)
+//    })
+//    println("++++++++++++++++++++++")
+//    flightArraysByCarrier.show()
+    val flightDataSerDe : FlightDataSerDe = new FlightDataSerDe
+    val flightSequenceByCarrier : Dataset[(String, Seq[Flight])] = flightsByCarrier.mapGroups { case (k, iter) => (k, iter.map(x => x).to) }
+     flightSequenceByCarrier.foreach( kv => {
+      println("key " + kv._1)
+      println("value " + kv._2.size)
+      kv._2.foreach( flight => {
+        println(Thread.currentThread().getId + " " + flight)
+        val record : GenericData.Record = flightDataSerDe.toGenericRecord(flight)
+      })
+    })
+    println("++++++++++++++++++++++")
+    //flightSequenceByCarrier.show()
 
 
 
-    val r1 : DataFrame = df.filter(flight => flight.carrier=="DL").select("dest","origin", "carrier").cache()
-    r1.show()
-    r1.groupBy("origin").count().orderBy(desc("origin")).show()
 
-
-    df.cache
-    df.createOrReplaceTempView("flights")
-    sparkSession.catalog.cacheTable("flights")
-    sparkSession.sql("select carrier,origin, dest, depdelay,crsdephour, " +
-      "dist, dofW from flights where depdelay > 40 order by depdelay desc limit 5").show
+//    val r1 : DataFrame = df.filter(flight => flight.carrier=="DL").select("dest","origin", "carrier").cache()
+//    r1.show()
+//    r1.groupBy("origin").count().orderBy(desc("origin")).show()
+//
+//
+//    df.cache
+//    df.createOrReplaceTempView("flights")
+//    sparkSession.catalog.cacheTable("flights")
+//    sparkSession.sql("select carrier,origin, dest, depdelay,crsdephour, " +
+//      "dist, dofW from flights where depdelay > 40 order by depdelay desc limit 5").show
 
     println("Elapsed " + (System.currentTimeMillis()-before))
     sparkSession.stop()
