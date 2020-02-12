@@ -1,8 +1,6 @@
 package com.petezybrick.pipeline.spark.basic
 
 import java.io.ByteArrayOutputStream
-
-import com.petezybrick.pipeline.spark.basic.FlightData.Flight
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericDatumReader, GenericDatumWriter, GenericRecord}
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}
@@ -14,18 +12,19 @@ import scala.io.Source
   */
 
 
-class FlightDataSerDe {
+class FlightDataSerDe extends Serializable {
 
   val avroSchema = Source.fromInputStream(getClass.getResourceAsStream("/schema/flight.avsc")).mkString
   val schema = new Schema.Parser().parse(avroSchema)
 
-  val reader = new GenericDatumReader[GenericRecord](schema)
-  val writer = new GenericDatumWriter[GenericRecord](schema)
+//  val reader = new GenericDatumReader[GenericRecord](schema)
+//  val writer = new GenericDatumWriter[GenericRecord](schema)
 
   def serialize(flight: Flight): Array[Byte] = {
     val out = new ByteArrayOutputStream()
     val encoder = EncoderFactory.get.binaryEncoder(out, null)
     val avroRecord = toGenericRecord(flight)
+    val writer = new GenericDatumWriter[GenericRecord](schema)
     writer.write(avroRecord, encoder)
     encoder.flush
     out.close
@@ -54,6 +53,7 @@ class FlightDataSerDe {
 
   def deserialize(bytes: Array[Byte]): Flight = {
     val decoder = DecoderFactory.get.binaryDecoder(bytes, null)
+    val reader = new GenericDatumReader[GenericRecord](schema)
     val record = reader.read(null, decoder)
     Flight(
       record.get("flight_id").toString,

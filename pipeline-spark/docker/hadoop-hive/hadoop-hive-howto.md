@@ -29,15 +29,35 @@ drop table tip_temp
 ==========================================
 
 CREATE TABLE flight_temp
+PARTITIONED BY (p_carrier string)
 STORED AS AVRO
-TBLPROPERTIES ('avro.schema.url'='hdfs://pipeline-hive-namenode:9000/user/pipeline/avro_schema/flight.avsc')
+TBLPROPERTIES ("avro.schema.url"="hdfs://pipeline-hive-namenode:9000/user/pipeline/avro_schema/flight.avsc")
 
 CREATE EXTERNAL TABLE flight
 LIKE flight_temp
-PARTITIONED BY (carrier string)
 STORED AS PARQUET
-LOCATION 'hdfs://pipeline-hive-namenode:9000/user/pipeline/db_flight'
+LOCATION 'hdfs://pipeline-hive-namenode:9000/user/pipeline/db_pipeline/flight/'
 
-drop table flight_temp
+ALTER TABLE flight ADD IF NOT EXISTS PARTITION (p_carrier='DL')
+ALTER TABLE flight ADD IF NOT EXISTS PARTITION (p_carrier='AA')
+ALTER TABLE flight ADD IF NOT EXISTS PARTITION (p_carrier='UA')
+ALTER TABLE flight ADD IF NOT EXISTS PARTITION (p_carrier='WN')
 
+ANALYZE TABLE flight PARTITION(p_carrier='DL') COMPUTE STATISTICS;
+ANALYZE TABLE flight PARTITION(p_carrier='AA') COMPUTE STATISTICS;
+ANALYZE TABLE flight PARTITION(p_carrier='UA') COMPUTE STATISTICS;
+ANALYZE TABLE flight PARTITION(p_carrier='WN') COMPUTE STATISTICS;
+
+
+/user/pipeline/db_pipeline/flight/p_carrier=AA
+
+Next
++ manually create p_carrier folder and manually put files into that folder
++ run query, verify
++ programmatic hdfs put, rm, mkdir
+
+
+CREATE EXTERNAL TABLE flight_pz ( flight_id string, dofw integer)
+STORED AS PARQUET
+LOCATION 'hdfs://pipeline-hive-namenode:9000/user/pipeline/db_pipeline/flight/'
 
