@@ -69,7 +69,8 @@ object FlightDataRun {
 
     //val tempPathName = System.getProperty("java.io.tmpdir") + tempFileNameExt
 
-    val basePathName = "pipeline-spark/docker/shared/db_pipeline/flight/p_carrier="
+    val basePathName = "hdfs://pipeline-hive-namenode:9000/user/pipeline/db_pipeline/flight/p_carrier="
+//    val basePathName = "pipeline-spark/docker/shared/db_pipeline/flight/p_carrier="
 
     val flightDataSerDe: FlightDataSerDe = new FlightDataSerDe
     val flightSequenceByCarrier: Dataset[(String, Seq[Flight])] = flightsByCarrier.mapGroups { case (k, iter) => (k, iter.map(x => x).to) }

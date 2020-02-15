@@ -36,7 +36,7 @@ TBLPROPERTIES ("avro.schema.url"="hdfs://pipeline-hive-namenode:9000/user/pipeli
 CREATE EXTERNAL TABLE flight
 LIKE flight_temp
 STORED AS PARQUET
-LOCATION 'hdfs://pipeline-hive-namenode:9000/user/pipeline/db_pipeline/flight/'
+LOCATION '/user/pipeline/db_pipeline/flight'
 
 ALTER TABLE flight ADD IF NOT EXISTS PARTITION (p_carrier='DL')
 ALTER TABLE flight ADD IF NOT EXISTS PARTITION (p_carrier='AA')
@@ -52,12 +52,11 @@ ANALYZE TABLE flight PARTITION(p_carrier='WN') COMPUTE STATISTICS;
 /user/pipeline/db_pipeline/flight/p_carrier=AA
 
 Next
-+ manually create p_carrier folder and manually put files into that folder
-+ run query, verify
+x manually create p_carrier folder and manually put files into that folder
+x run query, verify
 + programmatic hdfs put, rm, mkdir
++ hive jdbc connection pool, issue the alter tables and analyze tables
 
 
-CREATE EXTERNAL TABLE flight_pz ( flight_id string, dofw integer)
-STORED AS PARQUET
-LOCATION 'hdfs://pipeline-hive-namenode:9000/user/pipeline/db_pipeline/flight/'
+
 
