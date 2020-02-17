@@ -1,6 +1,7 @@
-package com.petezybrick.pipeline.spark.basic
+package com.petezybrick.pipeline.flight
 
 import java.io.ByteArrayOutputStream
+
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericDatumReader, GenericDatumWriter, GenericRecord}
 import org.apache.avro.io.{DecoderFactory, EncoderFactory}

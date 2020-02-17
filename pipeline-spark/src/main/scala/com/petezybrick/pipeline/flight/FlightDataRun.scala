@@ -1,26 +1,11 @@
-/*
- * Licensed to the Apache Software Foundation (ASF) under one or more
- * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
- * The ASF licenses this file to You under the Apache License, Version 2.0
- * (the "License"); you may not use this file except in compliance with
- * the License.  You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
-// scalastyle:off println
-package com.petezybrick.pipeline.spark.basic
+package com.petezybrick.pipeline.flight
 
 import java.io.IOException
+import java.sql.{Connection, ResultSet, Statement}
 import java.util.UUID
 
+import com.petezybrick.pipeline.filesystem.HdfsHelper
+import com.petezybrick.pipeline.hive.HiveDataSource
 import org.apache.avro.Schema
 import org.apache.avro.generic.GenericData
 import org.apache.hadoop.conf.Configuration
@@ -28,9 +13,7 @@ import org.apache.hadoop.fs.Path
 import org.apache.parquet.avro.AvroParquetWriter
 import org.apache.parquet.hadoop.ParquetWriter
 import org.apache.parquet.hadoop.metadata.CompressionCodecName
-import org.apache.spark.sql.types._
-import org.apache.spark.sql.{SparkSession, _}
-
+import org.apache.spark.sql.{Dataset, KeyValueGroupedDataset, SparkSession}
 
 object FlightDataRun {
 
@@ -58,26 +41,29 @@ object FlightDataRun {
     import sparkSession.implicits._
     val df: Dataset[Flight] = sparkSession.read.format("json").option("inferSchema", "false").schema(flightData.schema).load(file).as[Flight]
     val flightsByCarrier: KeyValueGroupedDataset[String, Flight] = df.groupByKey(flight => flight.carrier)
+    HiveDataSource.setJdbcParms( "jdbc:hive2://pipeline-hive-namenode:10000/db_pipeline", "", "")
 
-    //    val flightArraysByCarrier : Dataset[(String, Array[Flight])] = flightsByCarrier.mapGroups { case (k, iter) => (k, iter.map(x => x).toArray) }
-    //    flightArraysByCarrier.foreach( kv => {
-    //      println("key " + kv._1)
-    //      println("value " + kv._2)
-    //    })
-    //    println("++++++++++++++++++++++")
-    //    flightArraysByCarrier.show()
+    val hdfsNameNode= "pipeline-hive-namenode"
+    val hadoopUser = "pipeline"
+    val replaceAllFiles = true;
 
-    //val tempPathName = System.getProperty("java.io.tmpdir") + tempFileNameExt
-
-    val basePathName = "hdfs://pipeline-hive-namenode:9000/user/pipeline/db_pipeline/flight/p_carrier="
-//    val basePathName = "pipeline-spark/docker/shared/db_pipeline/flight/p_carrier="
-
+    val basePathName = "hdfs://" + hdfsNameNode + ":9000/user/" + hadoopUser + "/db_pipeline/flight/p_carrier="
+    //    val basePathName = "pipeline-spark/docker/shared/db_pipeline/flight/p_carrier="
     val flightDataSerDe: FlightDataSerDe = new FlightDataSerDe
     val flightSequenceByCarrier: Dataset[(String, Seq[Flight])] = flightsByCarrier.mapGroups { case (k, iter) => (k, iter.map(x => x).to) }
     try {
       flightSequenceByCarrier.foreach(kv => {
         println("key " + kv._1)
         println("value " + kv._2.size)
+        val hdfsHelper : HdfsHelper = new HdfsHelper(hdfsNameNode=hdfsNameNode, hadoopUser=hadoopUser)
+        val connHive : Connection = HiveDataSource.getConnection()
+        val stmt : Statement = connHive.createStatement()
+
+        if( replaceAllFiles ) {
+          hdfsHelper.rmDir( folder="/db_pipeline/flight/p_carrier=" + kv._1)
+        }
+
+        // TODO: write with configurable number of rows per file and/or size
         val ptnPathName = basePathName + kv._1 + "/" + UUID.randomUUID.toString + ".parquet"
         val writer: ParquetWriter[GenericData.Record] = createWriter(ptnPathName, flightDataSerDe.schema)
         kv._2.foreach(flight => {
@@ -86,6 +72,12 @@ object FlightDataRun {
           writer.write(record)
         })
         writer.close()
+        val alterTable = "ALTER TABLE flight ADD IF NOT EXISTS PARTITION (p_carrier='" + kv._1 + "')"
+        println("+++ " + alterTable)
+        stmt.execute(alterTable)
+        val computeStats = "ANALYZE TABLE flight PARTITION(p_carrier='" + kv._1 + "') COMPUTE STATISTICS"
+        println("+++ " + computeStats)
+        stmt.execute(computeStats)
       })
     } catch {
       case ex: Exception => {
@@ -118,5 +110,19 @@ object FlightDataRun {
       .withConf(new Configuration).withCompressionCodec(CompressionCodecName.SNAPPY).build
     writer
   }
-}
 
+  def initFileSystem( hdfsNameNode: String, hadoopUser: String ): Configuration = {
+    val hdfsUri = "hdfs://" + hdfsNameNode + ":9000"
+    val conf: Configuration = new Configuration
+    // Set FileSystem URI
+    conf.set("fs.defaultFS", hdfsUri)
+    // Because of Maven
+    // "Nothing"
+    conf.set("fs.hdfs.impl", "org.apache.hadoop.hdfs.DistributedFileSystem")
+    conf.set("fs.file.impl", "org.apache.hadoop.fs.LocalFileSystem")
+    // Set HADOOP user
+    System.setProperty("HADOOP_USER_NAME", hadoopUser)
+    System.setProperty("hadoop.home.dir", "/")
+    conf
+  }
+}

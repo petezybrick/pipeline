@@ -1,4 +1,4 @@
-package com.petezybrick.pipeline.spark.basic
+package com.petezybrick.pipeline.filesystem
 
 import java.net.URI
 

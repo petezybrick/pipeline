@@ -16,7 +16,7 @@
  */
 
 // scalastyle:off println
-package com.petezybrick.pipeline.spark.basic
+package com.petezybrick.pipeline.flight
 
 import org.apache.spark.sql.types._
 

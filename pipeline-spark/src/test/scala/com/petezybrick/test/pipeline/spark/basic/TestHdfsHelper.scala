@@ -1,6 +1,6 @@
 import java.net.URI
 
-import com.petezybrick.pipeline.spark.basic.HdfsHelper
+import com.petezybrick.pipeline.filesystem.HdfsHelper
 import org.apache.commons.io.IOUtils
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.fs.{FSDataInputStream, FSDataOutputStream, FileSystem, Path}
@@ -9,7 +9,7 @@ object TestHdfsHelper {
 
   def main(args: Array[String]): Unit = {
     try {
-      val hdfsHelper : HdfsHelper = new HdfsHelper(hdfsNameNode = "pipeline-hive-namenode", hadoopUser = "pipeline")
+      val hdfsHelper : HdfsHelper = new HdfsHelper(hdfsNameNode = "pipeline-hive-namenode", hadoopUser = "pipeline" )
 
       hdfsHelper.mkDir("folder_1")
       hdfsHelper.writeStringToFile("folder_1/file1", "first")
