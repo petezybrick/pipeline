@@ -10,10 +10,13 @@ object HiveDataSource extends Serializable {
 
   def setJdbcParms( _jdbcUrl : String, _jdbcUser : String, _jdbcPassword : String ) {
     jdbcUrl = _jdbcUrl
+    jdbcUser = _jdbcUser
+    jdbcPassword = _jdbcPassword
   }
 
   def getConnection() : Connection = {
-    Class.forName(jdbcClassName)
+    //Class.forName(jdbcClassName)
+    println("+++ jdbcUrl " + jdbcUrl)
     DriverManager.getConnection( jdbcUrl, jdbcUser, jdbcPassword)
   }
 

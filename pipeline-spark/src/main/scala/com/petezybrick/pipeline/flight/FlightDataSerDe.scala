@@ -15,16 +15,13 @@ import scala.io.Source
 
 class FlightDataSerDe extends Serializable {
 
-  val avroSchema = Source.fromInputStream(getClass.getResourceAsStream("/schema/flight.avsc")).mkString
-  val schema = new Schema.Parser().parse(avroSchema)
-
 //  val reader = new GenericDatumReader[GenericRecord](schema)
 //  val writer = new GenericDatumWriter[GenericRecord](schema)
 
-  def serialize(flight: Flight): Array[Byte] = {
+  def serialize(flight: Flight, schema : Schema): Array[Byte] = {
     val out = new ByteArrayOutputStream()
     val encoder = EncoderFactory.get.binaryEncoder(out, null)
-    val avroRecord = toGenericRecord(flight)
+    val avroRecord = toGenericRecord(flight, schema)
     val writer = new GenericDatumWriter[GenericRecord](schema)
     writer.write(avroRecord, encoder)
     encoder.flush
@@ -33,7 +30,7 @@ class FlightDataSerDe extends Serializable {
 
   }
 
-  def toGenericRecord(flight: Flight): GenericData.Record =  {
+  def toGenericRecord(flight: Flight, schema : Schema): GenericData.Record =  {
 
     val avroRecord = new GenericData.Record(schema)
     avroRecord.put("flight_id", flight._id)
@@ -52,7 +49,7 @@ class FlightDataSerDe extends Serializable {
   }
 
 
-  def deserialize(bytes: Array[Byte]): Flight = {
+  def deserialize(bytes: Array[Byte], schema : Schema): Flight = {
     val decoder = DecoderFactory.get.binaryDecoder(bytes, null)
     val reader = new GenericDatumReader[GenericRecord](schema)
     val record = reader.read(null, decoder)

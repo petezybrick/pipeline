@@ -15,6 +15,8 @@ import org.apache.parquet.hadoop.ParquetWriter
 import org.apache.parquet.hadoop.metadata.CompressionCodecName
 import org.apache.spark.sql.{Dataset, KeyValueGroupedDataset, SparkSession}
 
+import scala.io.Source
+
 object FlightDataRun {
 
   def main(args: Array[String]) {
@@ -31,8 +33,9 @@ object FlightDataRun {
     if (args.length > 0 && "local".equals(args(0))) {
       file = "file://" + args(1)
     } else {
-      file = "hdfs://namenode:9000/data/flight/flights20170102.json"
+      file = "hdfs://pipeline-hive-namenode:9000/data/flight/flights20170102.json"
     }
+    val schemaRawJson : String = Source.fromInputStream(getClass.getResourceAsStream("/schema/flight.avsc")).mkString
 
     val flightData : FlightData = new FlightData
     val before: Long = System.currentTimeMillis()
@@ -41,7 +44,6 @@ object FlightDataRun {
     import sparkSession.implicits._
     val df: Dataset[Flight] = sparkSession.read.format("json").option("inferSchema", "false").schema(flightData.schema).load(file).as[Flight]
     val flightsByCarrier: KeyValueGroupedDataset[String, Flight] = df.groupByKey(flight => flight.carrier)
-    HiveDataSource.setJdbcParms( "jdbc:hive2://pipeline-hive-namenode:10000/db_pipeline", "", "")
 
     val hdfsNameNode= "pipeline-hive-namenode"
     val hadoopUser = "pipeline"
@@ -55,6 +57,7 @@ object FlightDataRun {
       flightSequenceByCarrier.foreach(kv => {
         println("key " + kv._1)
         println("value " + kv._2.size)
+        HiveDataSource.setJdbcParms( "jdbc:hive2://pipeline-hive-namenode:10000/db_pipeline", "", "")
         val hdfsHelper : HdfsHelper = new HdfsHelper(hdfsNameNode=hdfsNameNode, hadoopUser=hadoopUser)
         val connHive : Connection = HiveDataSource.getConnection()
         val stmt : Statement = connHive.createStatement()
@@ -64,11 +67,13 @@ object FlightDataRun {
         }
 
         // TODO: write with configurable number of rows per file and/or size
+
         val ptnPathName = basePathName + kv._1 + "/" + UUID.randomUUID.toString + ".parquet"
-        val writer: ParquetWriter[GenericData.Record] = createWriter(ptnPathName, flightDataSerDe.schema)
+        val writer: ParquetWriter[GenericData.Record] = createWriter(ptnPathName, new Schema.Parser().parse(schemaRawJson))
         kv._2.foreach(flight => {
           println(Thread.currentThread().getId + " " + flight)
-          val record: GenericData.Record = flightDataSerDe.toGenericRecord(flight)
+          val schema = new Schema.Parser().parse(schemaRawJson)
+          val record: GenericData.Record = flightDataSerDe.toGenericRecord(flight, schema)
           writer.write(record)
         })
         writer.close()

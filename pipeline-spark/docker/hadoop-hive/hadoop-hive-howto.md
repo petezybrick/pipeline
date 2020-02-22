@@ -31,12 +31,12 @@ drop table tip_temp
 CREATE TABLE flight_temp
 PARTITIONED BY (p_carrier string)
 STORED AS AVRO
-TBLPROPERTIES ("avro.schema.url"="hdfs://pipeline-hive-namenode:9000/user/pipeline/avro_schema/flight.avsc")
+TBLPROPERTIES ("avro.schema.url"="hdfs://pipeline-hive-namenode:9000/user/pipeline/avro_schema/flight.avsc");
 
 CREATE EXTERNAL TABLE flight
 LIKE flight_temp
 STORED AS PARQUET
-LOCATION '/user/pipeline/db_pipeline/flight'
+LOCATION '/user/pipeline/db_pipeline/flight';
 
 ALTER TABLE flight ADD IF NOT EXISTS PARTITION (p_carrier='DL')
 ALTER TABLE flight ADD IF NOT EXISTS PARTITION (p_carrier='AA')

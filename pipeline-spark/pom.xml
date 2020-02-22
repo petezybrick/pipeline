@@ -45,7 +45,7 @@
     <repositories>
         <repository>
             <id>apache</id>
-            <url>http://repo.maven.apache.org/maven2/</url>
+            <url>https://repo.maven.apache.org/maven2/</url>
             <releases>
                 <enabled>true</enabled>
             </releases>
@@ -215,10 +215,11 @@
             <version>${spark.version}</version>
             <scope>provided</scope>
         </dependency>
+
         <dependency>
             <groupId>org.apache.hive</groupId>
             <artifactId>hive-jdbc</artifactId>
-            <version>3.0.0</version>
+            <version>3.0.0</version> <!-- 3.0.0  1.2.1-->
             <scope>provided</scope>
         </dependency>
 
@@ -293,7 +294,7 @@
                 </executions>
                 <configuration>
                     <sourceDir>src/main/scala</sourceDir>
-                    <sourceDir>src/test/scala</sourceDir>
+                    <testOutputDir>src/test/scala</testOutputDir>
                     <jvmArgs>
                         <jvmArg>-Xms1g</jvmArg>
                         <jvmArg>-Xmx6g</jvmArg>
@@ -321,7 +322,7 @@
                             <version>${project.version}</version>
                             <type>jar</type>
                             <overWrite>true</overWrite>
-                            <outputDirectory>pipeline-spark/docker/shared</outputDirectory>
+                            <outputDirectory>docker/shared</outputDirectory>
                         </artifactItem>
                     </artifactItems>
                 </configuration>

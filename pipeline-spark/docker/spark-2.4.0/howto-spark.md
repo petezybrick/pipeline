@@ -69,10 +69,22 @@ hdfs dfs -put /tmp/shared/flights20170102.json /data/flight/flights20170102.json
  10
 
 ./bin/spark-submit \
- --class com.petezybrick.pipeline.spark.basic.FlightData \
+ --class com.petezybrick.pipeline.flight.SparkPi \
+ --deploy-mode cluster \
+ --master spark://pipeline-spark-master:7077 \
+ --executor-memory 8G \
+ --executor-cores 2 \
+ --total-executor-cores 6 \
+ /tmp/shared/pipeline-spark-1.0.0.jar \
+ 10
+
+./bin/spark-submit \
+ --class com.petezybrick.pipeline.flight.FlightDataRun \
  --deploy-mode cluster \
  --master spark://pipeline-spark-master:7077 \
  --executor-memory 8G \
  --executor-cores 2 \
  --total-executor-cores 6 \
  /tmp/shared/pipeline-spark-1.0.0.jar
+
+ 

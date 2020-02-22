@@ -62,8 +62,12 @@ class HdfsHelper(val hdfsNameNode: String, val hadoopUser: String) {
     try {
       outputStream = fs.create(hdfswritepath)
       outputStream.writeBytes(fileContent)
+      //fs.close()
     } finally {
-      if (outputStream != null) outputStream.close()
+      if (outputStream != null) {
+       // outputStream.flush()
+        outputStream.close()
+      }
     }
   }
 

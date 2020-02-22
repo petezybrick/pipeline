@@ -249,13 +249,31 @@ services:
     #    environment:
     #      HADOOP_PREFIX: /usr/local/hadoop
     expose:
-      - 50076
+    - 50076
     ports:
-      - 50076:50076
+    - 50076:50076
     volumes:
-      - ./shared:/tmp/shared
-      - ./hadoop-hive/conf-hive:/usr/local/hive/conf
-      - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    - ./shared:/tmp/shared
+    - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+    - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
     depends_on:
-      - pipeline-hive-secondarynamenode
+    - pipeline-hive-secondarynamenode
+
+  pipeline-hive-datanode3:
+    image: hadoop-hive:2.9.0
+    command: hdfs datanode
+    hostname: pipeline-hive-datanode3
+    container_name: pipeline-hive-datanode3
+    #    environment:
+    #      HADOOP_PREFIX: /usr/local/hadoop
+    expose:
+    - 50077
+    ports:
+    - 50077:50077
+    volumes:
+    - ./shared:/tmp/shared
+    - ./hadoop-hive/conf-hive:/usr/local/hive/conf
+    - ./hadoop-hive/etc-hadoop:/usr/local/hadoop/etc/hadoop
+    depends_on:
+    - pipeline-hive-secondarynamenode
 
